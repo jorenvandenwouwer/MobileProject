@@ -5,6 +5,15 @@ import MapView from 'react-native-maps';
 import fetch from 'node-fetch';
 
 
+
+export const FetchData = () => {
+  const url = "https://api.jsonbin.io/b/5fba7557a825731fc0a11e8b";
+  fetch(url)
+  .then(response => response.json())
+  .then(dataResponse => console.log(dataResponse))
+}
+
+
 export default function App() {
   const region = {
     latitude: 51.231107,
@@ -14,14 +23,10 @@ export default function App() {
   }
     return (
     <View style={styles.container}>
-      {/* <Button title="API Press me" onPress={() => { 
-        fetch('https://api.jsonbin.io/b/5fb4e46b04be4f05c926c292')
-        .then(res => res.json())
-        .then(json => alert(json))
-      }}/>*/}
-      <MapView style={styles.mapStyle} region={region}/> 
+      <Button title="API Press me" onPress={FetchData} />
+      {/* <MapView style={styles.mapStyle} region={region}/> 
 
-      <StatusBar style="auto" />
+      <StatusBar style="auto" /> */}
     </View>
   );
 }
@@ -30,7 +35,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1, 
     backgroundColor: '#fff',
-    //justifyContent: "center"
+    justifyContent: "center"
 
 
   },
