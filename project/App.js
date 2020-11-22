@@ -19,7 +19,16 @@ export default () => {
     </NavigationContainer>
   )
 }
-const MapScreen = () => {
+
+export const FetchData = () => {
+  const url = "https://api.jsonbin.io/b/5fba7557a825731fc0a11e8b";
+  fetch(url)
+  .then(response => response.json())
+  .then(dataResponse => console.log(dataResponse))
+}
+
+
+export default function App() {
   const region = {
     latitude: 51.231107,
     longitude: 4.415127,
@@ -63,7 +72,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1, 
     backgroundColor: '#fff',
-    //justifyContent: "center"
+    justifyContent: "center"
 
 
   },
