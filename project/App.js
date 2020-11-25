@@ -7,6 +7,7 @@ import MapView from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 
+import { createStackNavigator} from '@react-navigation/stack'
 
 const Tab = createBottomTabNavigator();
 export default () => {
@@ -14,15 +15,13 @@ export default () => {
   return (
     <NavigationContainer>
       <Tab.Navigator>
-      <Tab.Screen name="List" component={ListScreen}/>
+      <Tab.Screen name="List" component={ListScreenStack}/>
         <Tab.Screen name="Map" component={MapScreen}/>
         <Tab.Screen name="Favorites" component={FavoriteScreen}/>
       </Tab.Navigator>
     </NavigationContainer>
   )
 }
-
-
 
 
 const MapScreen = () => {
@@ -47,19 +46,37 @@ const MapScreen = () => {
   )
 }
 
+
+const Stack = createStackNavigator();
+
+export const ListScreenStack = () => {
+  return(
+    <Stack.Navigator>
+      <Stack.Screen name="ListViewScreen" component={ListScreen} />
+      <Stack.Screen name="locatieDetail" component={locatieDetail} />
+    </Stack.Navigator>
+
+
+  );
+}
+
+
+
 const ListScreen = ({navigation}) => {
+
+const loadLocationData = async() => {
+  try {
+    let respone = await fetch("https://api.jsonbin.io/b/5fbb8b2b522f1f0550cc78f9");
+    let json = await respone.json();
+    setLocaties(json.features);
+  } catch(error){
+    console.log(error)
+  }
+}
+
   const [locaties,setLocaties] = useState([]); 
   useEffect(() => {
-    const FetchData = async() => {
-      try {
-        let respone = await fetch("https://api.jsonbin.io/b/5fbb8b2b522f1f0550cc78f9");
-        let json = await respone.json();
-        setLocaties(json.features);
-      } catch(error){
-        console.log(error)
-      }
-    }
-    FetchData()
+    loadLocationData();
   }, [])
   const renderItem = ({item}) => {
     return(
@@ -69,7 +86,6 @@ const ListScreen = ({navigation}) => {
     )
   }
   const keyExtractor = (item) => item.attributes.GISID;
-  
   return (
     <View>
       <FlatList
@@ -77,13 +93,19 @@ const ListScreen = ({navigation}) => {
         keyExtractor= {keyExtractor}
         renderItem= {renderItem}
         />
-        <Text> testing</Text>
     </View>
   )
 }
 
-const locatieDetail = () => {
-  
+export const locatieDetail = ({route, navigation}) => {
+  //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
+  return(
+  <View>
+  <Text>{route.params.item.attributes.Naam}</Text>
+  <Text>{route.params.item.attributes.Gemeente}</Text>
+  <Text>{route.params.item.attributes.District}</Text>
+  <Text>{route.params.item.attributes.Postcode}</Text>
+</View>);
 }
 const FavoriteScreen = () => {
   return (
