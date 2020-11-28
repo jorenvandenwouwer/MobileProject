@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
 import { Button,StyleSheet, Text, View } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 
@@ -15,8 +15,8 @@ export default () => {
   return (
     <NavigationContainer>
       <Tab.Navigator>
-      <Tab.Screen name="List" component={ListScreenStack}/>
         <Tab.Screen name="Map" component={MapScreen}/>
+        <Tab.Screen name="List" component={ListScreenStack}/>
         <Tab.Screen name="Favorites" component={FavoriteScreen}/>
       </Tab.Navigator>
     </NavigationContainer>
@@ -24,23 +24,53 @@ export default () => {
 }
 
 
-const MapScreen = () => {
+const MapScreen = ({navigation}) => {
+  const loadLocationData = async() => {
+    try {
+      let respone = await fetch("https://api.jsonbin.io/b/5fbb8b2b522f1f0550cc78f9");
+      let json = await respone.json();
+      setLocaties(json.features);
+    } catch(error){
+      console.log(error)
+    }
+  }
+  const detail = (locatie) => {
+    return  (
+      <TouchableOpacity style={styles.overlay}>
+        <Text style={styles.text}>Touchable Opacity</Text>
+      </TouchableOpacity>
+    )
+  }
   
+    const [locaties,setLocaties] = useState([]); 
+    useEffect(() => {
+      loadLocationData();
+    }, [])
+    const mapMarkers = () => {
+      return locaties.map((locatie) => 
+      <Marker
+          onPress={() => {detail(locatie)}}
+          key={locatie.attributes.OBJECTID}
+          coordinate={{latitude: locatie.attributes.Latitude,longitude:locatie.attributes.Longitude}}
+          title={locatie.attributes.Naam}
+          />
+        )
+    }
+    //locaties.map((locatie) => {console.log(locatie.attributes)})
   const region = {
     latitude: 51.231107,
     longitude: 4.415127,
-    latitudeDelta: 0.001,
-    longitudeDelta: 0.0421,
+    latitudeDelta: 0.3,
+    longitudeDelta: 0.3,
   }
     return (
     <View style={styles.container}>
-      { <Button title="API Press me" onPress={() => { 
-        fetch('https://api.jsonbin.io/b/5fb4e46b04be4f05c926c292')
-        .then(res => res.json())
-        .then(json => alert(json))
-      }}/>}
-      <MapView style={styles.mapStyle} region={region}/> 
-
+      
+      <MapView style={styles.mapStyle} region={region}> 
+      {mapMarkers()}
+      
+      </MapView> 
+      
       <StatusBar style="auto" />
     </View>
   )
@@ -59,7 +89,6 @@ export const ListScreenStack = () => {
 
   );
 }
-
 
 
 const ListScreen = ({navigation}) => {
@@ -111,7 +140,7 @@ const FavoriteScreen = () => {
   return (
     <View>
       <Text>
-
+        Joren is raar
       </Text>
     </View>
   )
@@ -128,6 +157,15 @@ const styles = StyleSheet.create({
   },
   mapStyle: {
     flex: 1,
+    zIndex: -1
+  },
+  overlay: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    top: 10,
+    left: 10,
+    zIndex: 10
   },
 
 });
