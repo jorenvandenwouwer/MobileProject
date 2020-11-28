@@ -37,7 +37,7 @@ const MapScreen = ({navigation}) => {
   const detail = (locatie) => {
     return  (
       <TouchableOpacity style={styles.overlay}>
-        <Text style={styles.text}>Touchable Opacity</Text>
+        <Text> testing </Text>
       </TouchableOpacity>
     )
   }
@@ -56,7 +56,6 @@ const MapScreen = ({navigation}) => {
           />
         )
     }
-    //locaties.map((locatie) => {console.log(locatie.attributes)})
   const region = {
     latitude: 51.231107,
     longitude: 4.415127,
