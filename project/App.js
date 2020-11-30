@@ -2,15 +2,16 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
-import { Button,StyleSheet, Text, View } from 'react-native';
+import { Button,StyleSheet, Text, View , Modal} from 'react-native';
 import MapView, { Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 
 import { createStackNavigator} from '@react-navigation/stack'
 
+import OverlayExample from './components/overlayers'
 import DetailOverlay from './components/DetailOverlay'
-
+import TestMap from './components/MapTest'
 
 const Tab = createBottomTabNavigator();
 export default () => {
@@ -21,7 +22,8 @@ export default () => {
         <Tab.Screen name="Map" component={MapScreen}/>
         <Tab.Screen name="List" component={ListScreenStack}/>
         <Tab.Screen name="Favorites" component={FavoriteScreen}/>
-        <Tab.Screen name="Test" component={DetailOverlay}/>
+        <Tab.Screen name="TestMap" component={TestMap}/>
+
       </Tab.Navigator>
     </NavigationContainer>
   )
@@ -54,7 +56,6 @@ const MapScreen = ({navigation}) => {
     const mapMarkers = () => {
       return locaties.map((locatie) => 
       <Marker
-          onPress={() => {detailPage(locatie)}}
           key={locatie.attributes.OBJECTID}
           coordinate={{latitude: locatie.attributes.Latitude,longitude:locatie.attributes.Longitude}}
           title={locatie.attributes.Naam}
@@ -67,7 +68,9 @@ const MapScreen = ({navigation}) => {
     latitudeDelta: 0.3,
     longitudeDelta: 0.3,
   }
-    return (
+
+  const [showModel, setShowModel] = useState(false);
+  return (
     <View style={styles.container}>
       
       <MapView style={styles.mapStyle} region={region}> 

@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
-import { Button,StyleSheet, Text, View, Modal} from 'react-native';
+import { Button,StyleSheet, Text, View , Modal} from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
