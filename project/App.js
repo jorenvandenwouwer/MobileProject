@@ -3,11 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
 import { Button,StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, Overlay } from 'react-native-maps';
+import MapView, { Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 
 import { createStackNavigator} from '@react-navigation/stack'
+
+import DetailOverlay from './components/DetailOverlay'
+
 
 const Tab = createBottomTabNavigator();
 export default () => {
@@ -18,6 +21,7 @@ export default () => {
         <Tab.Screen name="Map" component={MapScreen}/>
         <Tab.Screen name="List" component={ListScreenStack}/>
         <Tab.Screen name="Favorites" component={FavoriteScreen}/>
+        <Tab.Screen name="Test" component={DetailOverlay}/>
       </Tab.Navigator>
     </NavigationContainer>
   )
@@ -34,11 +38,12 @@ const MapScreen = ({navigation}) => {
       console.log(error)
     }
   }
-  const detail = (locatie) => {
+  const detailPage = (locatie) => {
     return  (
-      <TouchableOpacity style={styles.overlay}>
+      <View style={styles.overlay}>
         <Text> testing </Text>
-      </TouchableOpacity>
+    <Text>{locatie}</Text>
+      </View>
     )
   }
   
@@ -49,7 +54,7 @@ const MapScreen = ({navigation}) => {
     const mapMarkers = () => {
       return locaties.map((locatie) => 
       <Marker
-          onPress={() => {detail(locatie)}}
+          onPress={() => {detailPage(locatie)}}
           key={locatie.attributes.OBJECTID}
           coordinate={{latitude: locatie.attributes.Latitude,longitude:locatie.attributes.Longitude}}
           title={locatie.attributes.Naam}
@@ -68,8 +73,7 @@ const MapScreen = ({navigation}) => {
       <MapView style={styles.mapStyle} region={region}> 
       {mapMarkers()}
       
-      </MapView> 
-      
+      </MapView>
       <StatusBar style="auto" />
     </View>
   )
