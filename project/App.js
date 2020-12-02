@@ -6,6 +6,7 @@ import { Button,StyleSheet, Text, View , Modal} from 'react-native';
 import MapView, { Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-community/async-storage';
 
 import { createStackNavigator} from '@react-navigation/stack'
 
@@ -14,10 +15,12 @@ import DetailOverlay from './components/DetailOverlay'
 import TestMap from './components/MapTest'
 
 const Tab = createBottomTabNavigator();
+var Favorieten = [];
 export default () => {
-  
+  getData()
   return (
     <NavigationContainer>
+    <StatusBar hidden={true} /> 
       <Tab.Navigator>
         <Tab.Screen name="Map" component={MapScreen}/>
         <Tab.Screen name="List" component={ListScreenStack}/>
@@ -40,14 +43,6 @@ const MapScreen = ({navigation}) => {
       console.log(error)
     }
   }
-  const detailPage = (locatie) => {
-    return  (
-      <View style={styles.overlay}>
-        <Text> testing </Text>
-    <Text>{locatie}</Text>
-      </View>
-    )
-  }
   
     const [locaties,setLocaties] = useState([]); 
     useEffect(() => {
@@ -68,8 +63,6 @@ const MapScreen = ({navigation}) => {
     latitudeDelta: 0.3,
     longitudeDelta: 0.3,
   }
-
-  const [showModel, setShowModel] = useState(false);
   return (
     <View style={styles.container}>
       
@@ -115,7 +108,7 @@ const loadLocationData = async() => {
   }, [])
   const renderItem = ({item}) => {
     return(
-      <TouchableOpacity onPress={() => navigation.navigate('locatieDetail', {item:item})}>
+      <TouchableOpacity key={item.attributes.GISID} onPress={() => navigation.navigate('locatieDetail', {item:item.attributes})}>
         <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.attributes.Naam} {"\n"}{item.attributes.Gemeente} </Text></View>
       </TouchableOpacity>
     )
@@ -133,25 +126,79 @@ const loadLocationData = async() => {
 }
 
 export const locatieDetail = ({route, navigation}) => {
+  const item  = route.params.item;
+  const [isFavoriet,setIsFavoriet] = useState();
+  useEffect(() => {
+     if(Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID) > -1){
+      setIsFavoriet(true);
+     } else {
+       setIsFavoriet(false);
+     }
+  });
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
   <View>
-  <Text>{route.params.item.attributes.Naam}</Text>
-  <Text>{route.params.item.attributes.Gemeente}</Text>
-  <Text>{route.params.item.attributes.District}</Text>
-  <Text>{route.params.item.attributes.Postcode}</Text>
+  <Text>{item.Naam}</Text>
+  <Text>{item.Gemeente}</Text>
+  <Text>{item.District}</Text>
+  <Text>{item.Postcode}</Text>
+  <Button onPress={() =>{
+    const index = Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID);
+
+    console.log(index);
+     if(index <0){
+       Favorieten.push(item);
+       storeData(Favorieten);
+       setIsFavoriet(true);
+     } else{
+       Favorieten.splice(index,1);
+       storeData(Favorieten);
+       setIsFavoriet(false);
+     }
+  }} title={isFavoriet ? "Verwijder Favoriet" : "Voeg Favoriet toe"}/>
+  
 </View>);
 }
-const FavoriteScreen = () => {
+const FavoriteScreen = ({navigation}) => {
+  
+  const renderItem = ({item}) => {
+    return <TouchableOpacity  onPress={() => navigation.navigate('locatieDetail', {item:item})}>
+        <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.Naam} {"\n"}{item.Gemeente} </Text></View>
+      </TouchableOpacity>
+    
+  }
+  const keyExtractor = (item) => item.GISID;
   return (
     <View>
-      <Text>
-        Joren is raar
-      </Text>
+      <FlatList
+        data={Favorieten}
+        renderItem= {renderItem}
+        keyExtractor={keyExtractor}
+        />
     </View>
   )
 }
-
+const storeData = async(locatie) => {
+  try {
+    const jsonValue = JSON.stringify(locatie);
+    await AsyncStorage.setItem("favorieten", jsonValue);
+  } catch (error) {
+    
+  }
+}
+const getData = async() => {
+  try {
+    const value = await AsyncStorage.getItem('favorieten');
+    console.log("get data:")
+    if(value !== undefined){
+      Favorieten = JSON.parse(value);
+      console.log(Favorieten);
+    }
+  } catch (error) {
+    
+  }
+  
+}
 
 const styles = StyleSheet.create({
   container: {
