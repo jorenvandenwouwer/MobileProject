@@ -189,7 +189,6 @@ const storeData = async(locatie) => {
 const getData = async() => {
   try {
     const value = await AsyncStorage.getItem('favorieten');
-    console.log("get data:")
     if(value !== undefined){
       Favorieten = JSON.parse(value);
       console.log(Favorieten);
