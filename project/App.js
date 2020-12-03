@@ -16,47 +16,51 @@ import TestMap from './components/MapTest'
 
 const Tab = createBottomTabNavigator();
 var Favorieten = [];
+var locaties = [];
 export default () => {
-  getData()
-  return (
-    <NavigationContainer>
-    <StatusBar hidden={true} /> 
-      <Tab.Navigator>
-        <Tab.Screen name="Map" component={MapScreen}/>
-        <Tab.Screen name="List" component={ListScreenStack}/>
-        <Tab.Screen name="Favorites" component={FavoriteScreen}/>
-        <Tab.Screen name="TestMap" component={TestMap}/>
-
-      </Tab.Navigator>
-    </NavigationContainer>
-  )
-}
-
-
-const MapScreen = ({navigation}) => {
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    loadLocationData();
+    getData();
+  }, [])
   const loadLocationData = async() => {
+    console.log("fething")
     try {
-      let respone = await fetch("https://api.jsonbin.io/b/5fbb8b2b522f1f0550cc78f9");
+      let respone = await fetch("https://api.jsonbin.io/b/5fc8dddc045eb86f1f8a8e88");
       let json = await respone.json();
-      setLocaties(json.features);
+      setData(json.features);
     } catch(error){
       console.log(error)
     }
   }
+  console.log("data:" + data)
+  return (
+    <NavigationContainer>
+    <StatusBar hidden={true} /> 
+      <Tab.Navigator>
+        <Tab.Screen name="Map" >{props => <MapScreen {...props} data={data}/>}</Tab.Screen>
+        <Tab.Screen name="List" >{props => <ListScreenStack {...props} data={data}/>}</Tab.Screen>
+        <Tab.Screen name="Favorites" component={FavoriteScreen}></Tab.Screen>
+        <Tab.Screen name="TestMap" component={TestMap}></Tab.Screen>
+
+      </Tab.Navigator>
+    </NavigationContainer>
+  )
   
-    const [locaties,setLocaties] = useState([]); 
-    useEffect(() => {
-      loadLocationData();
-    }, [])
+}
+
+
+const MapScreen = ({navigation, data}) => {
+  console.log("map: " + data)
     const mapMarkers = () => {
-      return locaties.map((locatie) => 
+      return data.map((locatie) => 
       <Marker
           key={locatie.attributes.OBJECTID}
           coordinate={{latitude: locatie.attributes.Latitude,longitude:locatie.attributes.Longitude}}
           title={locatie.attributes.Naam}
-          />
-        )
-    }
+          />)
+        
+    };
   const region = {
     latitude: 51.231107,
     longitude: 4.415127,
@@ -78,11 +82,11 @@ const MapScreen = ({navigation}) => {
 
 const Stack = createStackNavigator();
 
-export const ListScreenStack = () => {
+export const ListScreenStack = ({data}) => {
   return(
     <Stack.Navigator>
-      <Stack.Screen name="ListViewScreen" component={ListScreen} />
-      <Stack.Screen name="locatieDetail" component={locatieDetail} />
+      <Stack.Screen name="ListViewScreen" >{props => <ListScreen {...props} data={data}/>}</Stack.Screen>
+      <Stack.Screen name="locatieDetail" component={LocatieDetail}></Stack.Screen>
     </Stack.Navigator>
 
 
@@ -90,22 +94,9 @@ export const ListScreenStack = () => {
 }
 
 
-const ListScreen = ({navigation}) => {
+const ListScreen = ({navigation,data}) => {
 
-const loadLocationData = async() => {
-  try {
-    let respone = await fetch("https://api.jsonbin.io/b/5fbb8b2b522f1f0550cc78f9");
-    let json = await respone.json();
-    setLocaties(json.features);
-  } catch(error){
-    console.log(error)
-  }
-}
-
-  const [locaties,setLocaties] = useState([]); 
-  useEffect(() => {
-    loadLocationData();
-  }, [])
+  
   const renderItem = ({item}) => {
     return(
       <TouchableOpacity key={item.attributes.GISID} onPress={() => navigation.navigate('locatieDetail', {item:item.attributes})}>
@@ -117,7 +108,7 @@ const loadLocationData = async() => {
   return (
     <View>
       <FlatList
-        data={locaties}
+        data={data}
         keyExtractor= {keyExtractor}
         renderItem= {renderItem}
         />
@@ -125,7 +116,7 @@ const loadLocationData = async() => {
   )
 }
 
-export const locatieDetail = ({route, navigation}) => {
+const LocatieDetail = ({route, navigation}) => {
   const item  = route.params.item;
   const [isFavoriet,setIsFavoriet] = useState();
   useEffect(() => {
@@ -160,7 +151,7 @@ export const locatieDetail = ({route, navigation}) => {
 </View>);
 }
 const FavoriteScreen = ({navigation}) => {
-  
+  console.log("favorieten: " + Favorieten);
   const renderItem = ({item}) => {
     return <TouchableOpacity  onPress={() => navigation.navigate('locatieDetail', {item:item})}>
         <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.Naam} {"\n"}{item.Gemeente} </Text></View>
