@@ -2,11 +2,12 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
-import { Button,StyleSheet, Text, View , Modal} from 'react-native';
+import { ActivityIndicator,Button,StyleSheet, Text, View , Modal} from 'react-native';
 import MapView, { Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
+import * as Location from 'expo-location';
 
 import { createStackNavigator} from '@react-navigation/stack'
 
@@ -19,12 +20,16 @@ var Favorieten = [];
 var locaties = [];
 export default () => {
   const [data, setData] = useState([]);
+  const [hasPermission, setHasPermission] = useState(null);
   useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+      })();
     loadLocationData();
     getData();
   }, [])
   const loadLocationData = async() => {
-    console.log("fething")
     try {
       let respone = await fetch("https://api.jsonbin.io/b/5fc8dddc045eb86f1f8a8e88");
       let json = await respone.json();
@@ -51,7 +56,23 @@ export default () => {
 
 
 const MapScreen = ({navigation, data}) => {
-  console.log("map: " + data)
+  
+  const [location,setLocation] = useState('loading');
+  useEffect(()=>{
+      (async() => {
+        let position = await Location.getCurrentPositionAsync();
+        setLocation(JSON.stringify(position));
+        })();
+    
+  },[]);
+  if(location === 'loading'){
+    return <View style={styles.container, styles.center}>
+        <Text style={{ fontSize: 40 }}>Getting location</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    
+  } else {
+    const jsonLocatie = JSON.parse(location)
     const mapMarkers = () => {
       return data.map((locatie) => 
       <Marker
@@ -62,21 +83,22 @@ const MapScreen = ({navigation, data}) => {
         
     };
   const region = {
-    latitude: 51.231107,
-    longitude: 4.415127,
+    latitude: jsonLocatie.coords.latitude,
+    longitude: jsonLocatie.coords.longitude,
     latitudeDelta: 0.3,
     longitudeDelta: 0.3,
   }
   return (
     <View style={styles.container}>
       
-      <MapView style={styles.mapStyle} region={region}> 
+      <MapView style={styles.mapStyle} region={region} showsUserLocation={true}> 
       {mapMarkers()}
       
       </MapView>
       <StatusBar style="auto" />
     </View>
-  )
+    )
+  }
 }
 
 
@@ -95,8 +117,6 @@ export const ListScreenStack = ({data}) => {
 
 
 const ListScreen = ({navigation,data}) => {
-
-  
   const renderItem = ({item}) => {
     return(
       <TouchableOpacity key={item.attributes.GISID} onPress={() => navigation.navigate('locatieDetail', {item:item.attributes})}>
@@ -136,7 +156,6 @@ const LocatieDetail = ({route, navigation}) => {
   <Button onPress={() =>{
     const index = Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID);
 
-    console.log(index);
      if(index <0){
        Favorieten.push(item);
        storeData(Favorieten);
@@ -151,7 +170,6 @@ const LocatieDetail = ({route, navigation}) => {
 </View>);
 }
 const FavoriteScreen = ({navigation}) => {
-  console.log("favorieten: " + Favorieten);
   const renderItem = ({item}) => {
     return <TouchableOpacity  onPress={() => navigation.navigate('locatieDetail', {item:item})}>
         <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.Naam} {"\n"}{item.Gemeente} </Text></View>
@@ -182,7 +200,6 @@ const getData = async() => {
     const value = await AsyncStorage.getItem('favorieten');
     if(value !== undefined){
       Favorieten = JSON.parse(value);
-      console.log(Favorieten);
     }
   } catch (error) {
     
@@ -202,6 +219,11 @@ const styles = StyleSheet.create({
     flex: 1,
     zIndex: -1
   },
+  loader: {
+    flex: 1,
+    zIndex: -2,
+    position: 'absolute'
+  },
   overlay: {
     position: 'absolute',
     width: 20,
@@ -210,5 +232,11 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 10
   },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10
+  }
 
 });
