@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
 import { ActivityIndicator,Button,StyleSheet, Text, View , Modal} from 'react-native';
-import MapView, { Circle, Marker, Overlay } from 'react-native-maps';
+import MapView, { Callout, Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -43,16 +43,17 @@ export default () => {
     <NavigationContainer>
     <StatusBar hidden={true} /> 
       <Tab.Navigator>
-        <Tab.Screen name="Map" >{props => <MapScreen {...props} data={data}/>}</Tab.Screen>
+        <Tab.Screen name="Map" >{props => <MapScreenStack {...props} data={data}/>}</Tab.Screen>
         <Tab.Screen name="List" >{props => <ListScreenStack {...props} data={data}/>}</Tab.Screen>
         <Tab.Screen name="Favorites" component={FavoriteScreen}></Tab.Screen>
-        <Tab.Screen name="TestMap" component={TestMap}></Tab.Screen>
-
       </Tab.Navigator>
     </NavigationContainer>
   )
   
 }
+
+
+
 
 
 const MapScreen = ({navigation, data}) => {
@@ -79,9 +80,22 @@ const MapScreen = ({navigation, data}) => {
           key={locatie.attributes.OBJECTID}
           coordinate={{latitude: locatie.attributes.Latitude,longitude:locatie.attributes.Longitude}}
           title={locatie.attributes.Naam}
-          />)
+          onCalloutPress={() => navigation.navigate('MapDetail', {locatie:locatie.attributes})}
+          > 
+          <Callout>
+            <View>
+              <Text>click me </Text>
+            </View>
+          </Callout>
+          </Marker>
+          
+          
+          
+          
+          )
         
     };
+    
   const region = {
     latitude: jsonLocatie.coords.latitude,
     longitude: jsonLocatie.coords.longitude,
@@ -93,8 +107,7 @@ const MapScreen = ({navigation, data}) => {
       
       <MapView style={styles.mapStyle} region={region} showsUserLocation={true}> 
       {mapMarkers()}
-      
-      </MapView>
+      </MapView>       
       <StatusBar style="auto" />
     </View>
     )
@@ -106,7 +119,10 @@ const Stack = createStackNavigator();
 
 export const ListScreenStack = ({data}) => {
   return(
-    <Stack.Navigator>
+    <Stack.Navigator
+      Options={{
+        headerShown:false
+      }}>
       <Stack.Screen name="ListViewScreen" >{props => <ListScreen {...props} data={data}/>}</Stack.Screen>
       <Stack.Screen name="locatieDetail" component={LocatieDetail}></Stack.Screen>
     </Stack.Navigator>
@@ -114,6 +130,30 @@ export const ListScreenStack = ({data}) => {
 
   );
 }
+
+
+
+export const MapScreenStack = ({data}) => {
+  return(
+    <Stack.Navigator>
+      <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
+      <Stack.Screen name="MapDetail" component={MapDetail}></Stack.Screen>
+    </Stack.Navigator>
+  );
+}
+
+
+export const MapDetail = ({route, navigation}) => {
+  const item = route.params.locatie;
+  return(
+    <View>
+          <Text>Detail Page</Text>
+        <Text>{item.Naam}</Text>
+    </View>
+
+  );
+}
+
 
 
 const ListScreen = ({navigation,data}) => {
