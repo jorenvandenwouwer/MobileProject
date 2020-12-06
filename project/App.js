@@ -84,7 +84,9 @@ const MapScreen = ({navigation, data}) => {
           > 
           <Callout>
             <View>
-              <Text>click me </Text>
+              <Text>{locatie.attributes.Naam} </Text>
+              <Text>{locatie.attributes.Gemeente} </Text>
+              <Button title="Detail Page"/>
             </View>
           </Callout>
           </Marker>
