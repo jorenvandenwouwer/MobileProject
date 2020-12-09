@@ -80,7 +80,7 @@ const MapScreen = ({navigation, data}) => {
           key={locatie.attributes.OBJECTID}
           coordinate={{latitude: locatie.attributes.Latitude,longitude:locatie.attributes.Longitude}}
           title={locatie.attributes.Naam}
-          onCalloutPress={() => navigation.navigate('MapDetail', {locatie:locatie.attributes})}
+          onCalloutPress={() => navigation.navigate('MapDetail', {item:locatie.attributes})}
           > 
           <Callout>
             <View>
@@ -137,25 +137,56 @@ export const ListScreenStack = ({data}) => {
 
 export const MapScreenStack = ({data}) => {
   return(
-    <Stack.Navigator>
+    <Stack.Navigator 
+    screenOptions={{
+      headerShown: false
+
+    }}
+    
+    >
       <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
-      <Stack.Screen name="MapDetail" component={MapDetail}></Stack.Screen>
+      <Stack.Screen name="MapDetail" component={MapDetailScreen}></Stack.Screen>
     </Stack.Navigator>
   );
 }
 
 
-export const MapDetail = ({route, navigation}) => {
-  const item = route.params.locatie;
+export const MapDetailScreen = ({route, navigation}) => {
+  const {item} = route.params;
   return(
-    <View>
-          <Text>Detail Page</Text>
-        <Text>{item.Naam}</Text>
-    </View>
+    <Stack.Navigator>
+      <Stack.Screen name="Detail" >{props => <DetailPage {...props} item={item}/>}</Stack.Screen>
+      <Stack.Screen name="Camera" component={CameraScreen} />
+    </Stack.Navigator>
 
   );
 }
 
+
+
+export const DetailPage = ({item, navigation}) => {
+ // const item = route.params.item;
+
+  return(
+  <View>
+      <Text style={{fontWeight: "bold", fontSize: 20}}>{item.Naam}</Text>
+      <Text style={{fontWeight: "bold", fontSize: 15}}>Informatie veld: </Text>
+      <Text>{item.Gemeente} {item.Postcode}</Text>    
+      <Button title="Neem een foto" onPress={() => navigation.navigate('Camera')}/>
+ </View>
+  );
+
+}
+ 
+
+export const CameraScreen = ({navigation}) => {
+  return (
+    <View>
+      <Text>Welcome to Camera Screen</Text>
+    </View>
+
+  );
+}
 
 
 const ListScreen = ({navigation,data}) => {
