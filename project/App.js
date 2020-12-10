@@ -1,19 +1,18 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
-import { ActivityIndicator,Button,StyleSheet, Text, View , Modal} from 'react-native';
+import { ActivityIndicator,Button,StyleSheet, Text, View , Modal, Image} from 'react-native';
 import MapView, { Callout, Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Location from 'expo-location';
 
-import { createStackNavigator} from '@react-navigation/stack'
+import { createStackNavigator} from '@react-navigation/stack';
+import { Camera } from 'expo-camera';
 
-import OverlayExample from './components/overlayers'
-import DetailOverlay from './components/DetailOverlay'
-import TestMap from './components/MapTest'
+
 
 const Tab = createBottomTabNavigator();
 var Favorieten = [];
@@ -51,9 +50,6 @@ export default () => {
   )
   
 }
-
-
-
 
 
 const MapScreen = ({navigation, data}) => {
@@ -165,8 +161,6 @@ export const MapDetailScreen = ({route, navigation}) => {
 
 
 export const DetailPage = ({item, navigation}) => {
- // const item = route.params.item;
-
   return(
   <View>
       <Text style={{fontWeight: "bold", fontSize: 20}}>{item.Naam}</Text>
@@ -180,9 +174,36 @@ export const DetailPage = ({item, navigation}) => {
  
 
 export const CameraScreen = ({navigation}) => {
+  const [hasPermission, setHasPermission] = useState();
+  const camera = useRef();
+  const [image, setImage] = useState();
+
+  useEffect(() => {
+      (async() => {
+        const {status} = await Camera.requestPermissionsAsync();
+        setHasPermission(status === 'granted')
+      });
+  },[]);
+
+  if (hasPermission === null) {
+    return <View />;
+  }
+  if (hasPermission === false) {
+    return <Text>Geen toegang tot camera</Text>
+  }
+  const takePicture = async() => {
+    let picture = await camera.current.takePictureAsync();
+    //camera.current heeft jouw echt de reference van de camera terug
+    setImage(picture.uri);
+  }
+
   return (
-    <View>
-      <Text>Welcome to Camera Screen</Text>
+    <View style={styles.cameraStyle}>
+      <Camera style={{flex: 1}} type={Camera.Constants.Type.back} ref={camera} />
+      {/* soms wil je een refrence naar object van die camera om een functie te kunnen uitvoeren*/}
+      {/* soms wil je op het object zelf een functie aan roepen  */}
+      {image && <Image source={{uri: image}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/> }
+      <Button title="Neem foto" onPress={takePicture} />
     </View>
 
   );
@@ -310,6 +331,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10
+  },
+  cameraStyle:{
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
   }
 
 });
