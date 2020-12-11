@@ -8,10 +8,9 @@ import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Location from 'expo-location';
-
 import { createStackNavigator} from '@react-navigation/stack';
 import { Camera } from 'expo-camera';
-
+import * as FileSystem from 'expo-file-system'
 
 
 const Tab = createBottomTabNavigator();
@@ -50,7 +49,6 @@ export default () => {
   )
   
 }
-
 
 const MapScreen = ({navigation, data}) => {
   
@@ -112,7 +110,6 @@ const MapScreen = ({navigation, data}) => {
   }
 }
 
-
 const Stack = createStackNavigator();
 
 export const ListScreenStack = ({data}) => {
@@ -129,8 +126,6 @@ export const ListScreenStack = ({data}) => {
   );
 }
 
-
-
 export const MapScreenStack = ({data}) => {
   return(
     <Stack.Navigator 
@@ -146,7 +141,6 @@ export const MapScreenStack = ({data}) => {
   );
 }
 
-
 export const MapDetailScreen = ({route, navigation}) => {
   const {item} = route.params;
   return(
@@ -157,8 +151,6 @@ export const MapDetailScreen = ({route, navigation}) => {
 
   );
 }
-
-
 
 export const DetailPage = ({item, navigation}) => {
   return(
@@ -171,13 +163,11 @@ export const DetailPage = ({item, navigation}) => {
   );
 
 }
- 
 
 export const CameraScreen = ({navigation}) => {
   const [hasPermission, setHasPermission] = useState();
   const camera = useRef();
   const [image, setImage] = useState();
-
   useEffect(() => {
       (async() => {
         const {status} = await Camera.requestPermissionsAsync();
@@ -196,6 +186,23 @@ export const CameraScreen = ({navigation}) => {
     //camera.current heeft jouw echt de reference van de camera terug
     setImage(picture.uri);
   }
+
+  useEffect(() => {
+    const savePicture = async() => {
+      try{
+        let fileTest = await FileSystem.getInfoAsync(image);
+        console.log(fileTest);
+      }
+      catch (error) {
+        console.log(error);
+      }
+
+    }
+    savePicture();
+  }, [image]);
+
+  
+
 
   return (
     <View style={styles.cameraStyle}>

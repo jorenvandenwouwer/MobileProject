@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "expo": "^39.0.5",
+    "expo-file-system": "^9.3.0",
     "react": "^17.0.1",
     "react-native": "^0.63.3"
   }
