@@ -57,8 +57,12 @@ export default () => {
 
 
 const MapScreen = ({navigation, data}) => {
-  
+ 
+
+  const [showModel, setShowModel] = useState(false);
   const [location,setLocation] = useState('loading');
+  const [current, setCurrent] = useState(null);
+  const [storeData, setStoreData] = useState(null);
   useEffect(()=>{
       (async() => {
         let position = await Location.getCurrentPositionAsync();
@@ -79,37 +83,37 @@ const MapScreen = ({navigation, data}) => {
       <Marker
           key={locatie.attributes.OBJECTID}
           coordinate={{latitude: locatie.attributes.Latitude,longitude:locatie.attributes.Longitude}}
-          title={locatie.attributes.Naam}
-          onCalloutPress={() => navigation.navigate('MapDetail', {locatie:locatie.attributes})}
-          > 
-          <Callout>
-            <View>
-              <Text>{locatie.attributes.Naam} </Text>
-              <Text>{locatie.attributes.Gemeente} </Text>
-              <Button title="Detail Page"/>
-            </View>
-          </Callout>
+          
+          onPress={() => {
+            setShowModel(true)
+            setCurrent(locatie)
+            }}
+          >
           </Marker>
-          
-          
-          
-          
           )
         
     };
     
-  const region = {
-    latitude: jsonLocatie.coords.latitude,
-    longitude: jsonLocatie.coords.longitude,
-    latitudeDelta: 0.3,
-    longitudeDelta: 0.3,
-  }
+    const region = {
+      latitude: jsonLocatie.coords.latitude,
+      longitude: jsonLocatie.coords.longitude,
+      latitudeDelta: 0.3,
+      longitudeDelta: 0.3,
+    }
   return (
     <View style={styles.container}>
       
-      <MapView style={styles.mapStyle} region={region} showsUserLocation={true}> 
+      <MapView style={styles.mapStyle} initialRegion={region} showsUserLocation={true} onPress={()=> setShowModel(false)}> 
       {mapMarkers()}
-      </MapView>       
+      </MapView> 
+      {showModel && <View style={{ flex: 1, position: 'absolute',alignSelf: 'stretch'}}>
+              <View style={{backgroundColor:"#ffffff", marginTop: '100%', padding:20,width:'100%'}}>
+                  <Text style={{fontSize: 40}}>{current.attributes.Naam}</Text>
+                  <Button style={styles.button} title="Detail Page" onPress={() => navigation.navigate('MapDetail', {locatie:current.attributes}, setShowModel(!showModel))}/>
+              </View>
+            </View>
+         
+      }
       <StatusBar style="auto" />
     </View>
     )
