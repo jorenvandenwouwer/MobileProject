@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer} from '@react-navigation/native';
-import { ActivityIndicator,Button,StyleSheet, Text, View , Modal} from 'react-native';
+import { ActivityIndicator,Button,StyleSheet, Text, View , Modal, Image} from 'react-native';
 import MapView, { Callout, Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
@@ -50,7 +50,6 @@ export default () => {
   )
   
 }
-
 
 
 
@@ -105,10 +104,10 @@ const MapScreen = ({navigation, data}) => {
       <MapView style={styles.mapStyle} initialRegion={region} showsUserLocation={true} onPress={()=> setShowModel(false)}> 
       {mapMarkers()}
       </MapView> 
-      {showModel && <View style={{ flex: 1, position: 'absolute',alignSelf: 'stretch'}}>
+      {showModel && <View style={{ flex: 1, position: 'absolute', alignSelf: 'stretch'}}>
               <View style={{backgroundColor:"#ffffff", marginTop: '100%', padding:20,width:'100%'}}>
                   <Text style={{fontSize: 40}}>{current.attributes.Naam}</Text>
-                  <Button style={styles.button} title="Detail Page" onPress={() => navigation.navigate('MapDetail', {locatie:current.attributes}, setShowModel(!showModel))}/>
+                  <Button style={styles.button} title="Detail Page" onPress={() => navigation.navigate('MapDetail', {item:current.attributes}, setShowModel(!showModel))}/>
               </View>
             </View>
          
@@ -139,25 +138,98 @@ export const ListScreenStack = ({data}) => {
 
 
 export const MapScreenStack = ({data}) => {
+    return(
+      <Stack.Navigator 
+      screenOptions={{
+        headerShown: false
+  
+      }}
+      
+      >
+        <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
+        <Stack.Screen name="MapDetail" component={MapDetailScreen}></Stack.Screen>
+      </Stack.Navigator>
+    );
+  }
+
+export const MapDetailScreen = ({route, navigation}) => {
+  const {item} = route.params;
   return(
     <Stack.Navigator>
-      <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
-      <Stack.Screen name="MapDetail" component={MapDetail}></Stack.Screen>
+      <Stack.Screen name="Detail" >{props => <DetailPage {...props} item={item}/>}</Stack.Screen>
+      <Stack.Screen name="Camera" component={CameraScreen} />
     </Stack.Navigator>
+
   );
 }
 
 
-export const MapDetail = ({route, navigation}) => {
-  const item = route.params.locatie;
+export const DetailPage = ({item, navigation}) => {
   return(
-    <View>
-          <Text>Detail Page</Text>
-        <Text>{item.Naam}</Text>
+  <View>
+      <Text style={{fontWeight: "bold", fontSize: 20}}>{item.Naam}</Text>
+      <Text style={{fontWeight: "bold", fontSize: 15}}>Informatie veld: </Text>
+      <Text>{item.Gemeente} {item.Postcode}</Text>    
+      <Button title="Neem een foto" onPress={() => navigation.navigate('Camera')}/>
+ </View>
+  );
+
+}
+
+export const CameraScreen = ({navigation}) => {
+  const [hasPermission, setHasPermission] = useState();
+  const camera = useRef();
+  const [image, setImage] = useState();
+  useEffect(() => {
+      (async() => {
+        const {status} = await Camera.requestPermissionsAsync();
+        setHasPermission(status === 'granted')
+      });
+  },[]);
+
+  if (hasPermission === null) {
+    return <View />;
+  }
+  if (hasPermission === false) {
+    return <Text>Geen toegang tot camera</Text>
+  }
+  const takePicture = async() => {
+    let picture = await camera.current.takePictureAsync();
+    //camera.current heeft jouw echt de reference van de camera terug
+    console.log("picture has been taken");
+    setImage(picture.uri);
+  }
+
+  useEffect(() => {
+    const savePicture = async() => {
+      try{
+        let fileTest = await FileSystem.getInfoAsync(image);
+        console.log(fileTest);
+      }
+      catch (error) {
+        console.log(error);
+      }
+
+    }
+    savePicture();
+  }, [image]);
+
+  
+
+
+  return (
+    <View style={styles.cameraStyle}>
+      <Camera style={{flex: 1}} type={Camera.Constants.Type.back} ref={camera} />
+      {/* soms wil je een refrence naar object van die camera om een functie te kunnen uitvoeren*/}
+      {/* soms wil je op het object zelf een functie aan roepen  */}
+      {image && <Image source={{uri: image}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/> }
+      <Button title="Neem foto" onPress={takePicture} />
     </View>
 
   );
 }
+
+
 
 
 
@@ -282,6 +354,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10
+  },
+  cameraStyle:{
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
   }
+
 
 });
