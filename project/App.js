@@ -8,12 +8,11 @@ import fetch from 'node-fetch';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Location from 'expo-location';
+import { Camera } from 'expo-camera';
+import * as FileSystem from 'expo-file-system'
 
 import { createStackNavigator} from '@react-navigation/stack'
 
-import OverlayExample from './components/overlayers'
-import DetailOverlay from './components/DetailOverlay'
-import TestMap from './components/MapTest'
 
 const Tab = createBottomTabNavigator();
 var Favorieten = [];
