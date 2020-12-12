@@ -167,6 +167,7 @@ export const MapDetailScreen = ({route, navigation}) => {
 export const DetailPage = ({item, navigation}) => {
   return(
   <View>
+      
       <Text style={{fontWeight: "bold", fontSize: 20}}>{item.Naam}</Text>
       <Text style={{fontWeight: "bold", fontSize: 15}}>Informatie veld: </Text>
       <Text>{item.Gemeente} {item.Postcode}</Text>    
@@ -196,22 +197,26 @@ export const CameraScreen = ({navigation}) => {
   const takePicture = async() => {
     let picture = await camera.current.takePictureAsync();
     //camera.current heeft jouw echt de reference van de camera terug
-    console.log("picture has been taken");
     setImage(picture.uri);
   }
 
   useEffect(() => {
-    const savePicture = async() => {
-      try{
-        let fileTest = await FileSystem.getInfoAsync(image);
-        console.log(fileTest);
-      }
-      catch (error) {
-        console.log(error);
-      }
+    const imageDir = FileSystem.cacheDirectory +'detail/';
+    const imageFileUri = imageDir + image;
 
+    const dirExist = async() => {
+      const dirInfo = await FileSystem.getInfoAsync(imageDir);
+      if(!dirInfo.exists){
+        console.log("Image directory doesn't exist, creating...");
+        await FileSystem.makeDirectoryAsync(imageDir, {intermediates: true});
+      }
     }
-    savePicture();
+   
+    dirExist();
+
+    if(image !== null){
+      addingContent();
+    }
   }, [image]);
 
   
