@@ -14,9 +14,9 @@ import * as FileSystem from 'expo-file-system'
 import { createStackNavigator} from '@react-navigation/stack'
 
 
+const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 var Favorieten = [];
-var locaties = [];
 export default () => {
   const [data, setData] = useState([]);
   const [hasPermission, setHasPermission] = useState(null);
@@ -50,10 +50,35 @@ export default () => {
   )
   
 }
+export const ListScreenStack = ({data}) => {
+  return(
+    <Stack.Navigator
+      Options={{
+        headerShown:false
+      }}>
+      <Stack.Screen name="ListViewScreen" >{props => <ListScreen {...props} data={data}/>}</Stack.Screen>
+      <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
+      <Stack.Screen name="CameraScreen" component={CameraScreen}></Stack.Screen>
+    </Stack.Navigator>
 
 
-
-
+  );
+}
+export const MapScreenStack = ({data}) => {
+    return(
+      <Stack.Navigator 
+      screenOptions={{
+        headerShown: false
+  
+      }}
+      
+      >
+        <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
+        <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
+        <Stack.Screen name="CameraScreen" component={CameraScreen}></Stack.Screen>
+      </Stack.Navigator>
+    );
+  }
 const MapScreen = ({navigation, data}) => {
  
 
@@ -117,127 +142,6 @@ const MapScreen = ({navigation, data}) => {
     )
   }
 }
-
-
-const Stack = createStackNavigator();
-
-export const ListScreenStack = ({data}) => {
-  return(
-    <Stack.Navigator
-      Options={{
-        headerShown:false
-      }}>
-      <Stack.Screen name="ListViewScreen" >{props => <ListScreen {...props} data={data}/>}</Stack.Screen>
-      <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
-    </Stack.Navigator>
-
-
-  );
-}
-
-
-
-export const MapScreenStack = ({data}) => {
-    return(
-      <Stack.Navigator 
-      screenOptions={{
-        headerShown: false
-  
-      }}
-      
-      >
-        <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
-        <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
-      </Stack.Navigator>
-    );
-  }
-
-export const MapDetailScreen = ({route, navigation}) => {
-  const {item} = route.params;
-  return(
-    <Stack.Navigator>
-      <Stack.Screen name="Detail" >{props => <DetailPage {...props} item={item}/>}</Stack.Screen>
-      <Stack.Screen name="Camera" component={CameraScreen} />
-    </Stack.Navigator>
-
-  );
-}
-
-
-export const DetailPage = ({item, navigation}) => {
-  return(
-  <View>
-      
-      <Text style={{fontWeight: "bold", fontSize: 20}}>{item.Naam}</Text>
-      <Text style={{fontWeight: "bold", fontSize: 15}}>Informatie veld: </Text>
-      <Text>{item.Gemeente} {item.Postcode}</Text>    
-      <Button title="Neem een foto" onPress={() => navigation.navigate('Camera')}/>
- </View>
-  );
-
-}
-
-export const CameraScreen = ({navigation}) => {
-  const [hasPermission, setHasPermission] = useState();
-  const camera = useRef();
-  const [image, setImage] = useState();
-  useEffect(() => {
-      (async() => {
-        const {status} = await Camera.requestPermissionsAsync();
-        setHasPermission(status === 'granted')
-      });
-  },[]);
-
-  if (hasPermission === null) {
-    return <View />;
-  }
-  if (hasPermission === false) {
-    return <Text>Geen toegang tot camera</Text>
-  }
-  const takePicture = async() => {
-    let picture = await camera.current.takePictureAsync();
-    //camera.current heeft jouw echt de reference van de camera terug
-    setImage(picture.uri);
-  }
-
-  useEffect(() => {
-    const imageDir = FileSystem.cacheDirectory +'detail/';
-    const imageFileUri = imageDir + image;
-
-    const dirExist = async() => {
-      const dirInfo = await FileSystem.getInfoAsync(imageDir);
-      if(!dirInfo.exists){
-        console.log("Image directory doesn't exist, creating...");
-        await FileSystem.makeDirectoryAsync(imageDir, {intermediates: true});
-      }
-    }
-   
-    dirExist();
-
-    if(image !== null){
-      addingContent();
-    }
-  }, [image]);
-
-  
-
-
-  return (
-    <View style={styles.cameraStyle}>
-      <Camera style={{flex: 1}} type={Camera.Constants.Type.back} ref={camera} />
-      {/* soms wil je een refrence naar object van die camera om een functie te kunnen uitvoeren*/}
-      {/* soms wil je op het object zelf een functie aan roepen  */}
-      {image && <Image source={{uri: image}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/> }
-      <Button title="Neem foto" onPress={takePicture} />
-    </View>
-
-  );
-}
-
-
-
-
-
 const ListScreen = ({navigation,data}) => {
   const renderItem = ({item}) => {
     return(
@@ -257,6 +161,31 @@ const ListScreen = ({navigation,data}) => {
     </View>
   )
 }
+const FavoriteScreen = ({navigation}) => {
+  if(Favorieten.length ==0){
+    return <View style={styles.container, styles.center}>
+      <Text style={{fontSize: 20}}>Voeg eerst favorieten toe</Text>
+    </View>
+  } else {
+  const renderItem = ({item}) => {
+    return <TouchableOpacity  onPress={() => navigation.navigate('Detail', {item:item})}>
+        <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.Naam} {"\n"}{item.Gemeente} </Text></View>
+      </TouchableOpacity>
+    
+  }
+  const keyExtractor = (item) => item.GISID;
+  return (
+    <View>
+      <FlatList
+        data={Favorieten}
+        renderItem= {renderItem}
+        keyExtractor={keyExtractor}
+        />
+    </View>
+  )
+  }
+}
+
 
 const Detail = ({route, navigation}) => {
   const item  = route.params.item;
@@ -288,33 +217,55 @@ const Detail = ({route, navigation}) => {
        setIsFavoriet(false);
      }
   }} title={isFavoriet ? "Verwijder Favoriet" : "Voeg Favoriet toe"}/>
+  <Button title="Neem een foto" onPress={() => navigation.navigate('CameraScreen')}/>
+
   
 </View>);
 }
-const FavoriteScreen = ({navigation}) => {
-  if(Favorieten.length ==0){
-    return <View style={styles.container, styles.center}>
-      <Text style={{fontSize: 20}}>Voeg eerst favorieten toe</Text>
-    </View>
-  } else {
-  const renderItem = ({item}) => {
-    return <TouchableOpacity  onPress={() => navigation.navigate('Detail', {item:item})}>
-        <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.Naam} {"\n"}{item.Gemeente} </Text></View>
-      </TouchableOpacity>
-    
+
+export const CameraScreen = ({navigation}) => {
+  const [hasPermission, setHasPermission] = useState();
+  const camera = useRef();
+  const [image, setImage] = useState();
+  useEffect(() => {
+      (async() => {
+        const {status} = await Camera.requestPermissionsAsync();
+        setHasPermission(status === 'granted')
+      });
+  },[]);
+
+  if (hasPermission === null) {
+    return <View />;
   }
-  const keyExtractor = (item) => item.GISID;
+  if (hasPermission === false) {
+    return <Text>Geen toegang tot camera</Text>
+  }
+  const takePicture = async() => {
+    let picture = await camera.current.takePictureAsync();
+    //camera.current heeft jouw echt de reference van de camera terug
+    setImage(picture.uri);
+  }
+
+  
+
+  
+
+
   return (
-    <View>
-      <FlatList
-        data={Favorieten}
-        renderItem= {renderItem}
-        keyExtractor={keyExtractor}
-        />
+    <View style={styles.cameraStyle}>
+      <Camera style={{flex: 1}} type={Camera.Constants.Type.back} ref={camera} />
+      {/* soms wil je een refrence naar object van die camera om een functie te kunnen uitvoeren*/}
+      {/* soms wil je op het object zelf een functie aan roepen  */}
+      {image && <Image source={{uri: image}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/> }
+      <Button title="Neem foto" onPress={takePicture} />
     </View>
-  )
-  }
+
+  );
 }
+
+
+
+
 const storeData = async(locatie) => {
   try {
     const jsonValue = JSON.stringify(locatie);
