@@ -107,7 +107,7 @@ const MapScreen = ({navigation, data}) => {
       {showModel && <View style={{ flex: 1, position: 'absolute', alignSelf: 'stretch'}}>
               <View style={{backgroundColor:"#ffffff", marginTop: '100%', padding:20,width:'100%'}}>
                   <Text style={{fontSize: 40}}>{current.attributes.Naam}</Text>
-                  <Button style={styles.button} title="Detail Page" onPress={() => navigation.navigate('MapDetail', {item:current.attributes}, setShowModel(!showModel))}/>
+                  <Button style={styles.button} title="Detail Page" onPress={() => navigation.navigate('Detail', {item:current.attributes}, setShowModel(!showModel))}/>
               </View>
             </View>
          
@@ -128,7 +128,7 @@ export const ListScreenStack = ({data}) => {
         headerShown:false
       }}>
       <Stack.Screen name="ListViewScreen" >{props => <ListScreen {...props} data={data}/>}</Stack.Screen>
-      <Stack.Screen name="locatieDetail" component={LocatieDetail}></Stack.Screen>
+      <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
     </Stack.Navigator>
 
 
@@ -147,7 +147,7 @@ export const MapScreenStack = ({data}) => {
       
       >
         <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
-        <Stack.Screen name="MapDetail" component={MapDetailScreen}></Stack.Screen>
+        <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
       </Stack.Navigator>
     );
   }
@@ -241,7 +241,7 @@ export const CameraScreen = ({navigation}) => {
 const ListScreen = ({navigation,data}) => {
   const renderItem = ({item}) => {
     return(
-      <TouchableOpacity key={item.attributes.GISID} onPress={() => navigation.navigate('locatieDetail', {item:item.attributes})}>
+      <TouchableOpacity key={item.attributes.GISID} onPress={() => navigation.navigate('Detail', {item:item.attributes})}>
         <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.attributes.Naam} {"\n"}{item.attributes.Gemeente} </Text></View>
       </TouchableOpacity>
     )
@@ -258,7 +258,7 @@ const ListScreen = ({navigation,data}) => {
   )
 }
 
-const LocatieDetail = ({route, navigation}) => {
+const Detail = ({route, navigation}) => {
   const item  = route.params.item;
   const [isFavoriet,setIsFavoriet] = useState();
   useEffect(() => {
@@ -292,8 +292,13 @@ const LocatieDetail = ({route, navigation}) => {
 </View>);
 }
 const FavoriteScreen = ({navigation}) => {
+  if(Favorieten.length ==0){
+    return <View style={styles.container, styles.center}>
+      <Text style={{fontSize: 20}}>Voeg eerst favorieten toe</Text>
+    </View>
+  } else {
   const renderItem = ({item}) => {
-    return <TouchableOpacity  onPress={() => navigation.navigate('locatieDetail', {item:item})}>
+    return <TouchableOpacity  onPress={() => navigation.navigate('Detail', {item:item})}>
         <View style={{backgroundColor:"#4287f5", height:70, margin:1}}><Text>{item.Naam} {"\n"}{item.Gemeente} </Text></View>
       </TouchableOpacity>
     
@@ -308,6 +313,7 @@ const FavoriteScreen = ({navigation}) => {
         />
     </View>
   )
+  }
 }
 const storeData = async(locatie) => {
   try {
@@ -324,18 +330,13 @@ const getData = async() => {
       Favorieten = JSON.parse(value);
     }
   } catch (error) {
-    
   }
-  
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1, 
     backgroundColor: '#fff',
     justifyContent: "center"
-
-
   },
   mapStyle: {
     flex: 1,
@@ -366,6 +367,4 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     justifyContent: 'flex-start',
   }
-
-
 });
