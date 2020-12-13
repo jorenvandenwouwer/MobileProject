@@ -16,7 +16,7 @@ import { createStackNavigator} from '@react-navigation/stack'
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
-const Favorieten = [];
+let Favorieten = [];
 export default () => {
   const [data, setData] = useState([]);
   const [hasPermission, setHasPermission] = useState(null);
@@ -124,9 +124,11 @@ const MapScreen = ({navigation, data}) => {
       <MapView style={styles.mapStyle} initialRegion={region} showsUserLocation={true} onPress={()=> setShowModel(false)}> 
       {mapMarkers()}
       </MapView> 
-      {showModel && <View style={{ flex: 1, position: 'absolute', alignSelf: 'stretch'}}>
-              <View style={{backgroundColor:"#ffffff", marginTop: '100%', padding:20,width:'100%'}}>
-                  <Text style={{fontSize: 40}}>{current.attributes.Naam}</Text>
+      {showModel && 
+            <View style={{ flex: 1, position: 'absolute', flexDirection: 'column-reverse', height: 100, width:100, bottom: 20, left:100, }}>
+              <View style={{backgroundColor:"#ffffff", marginTop: 200, padding:20, width: 230, height: 120}}>
+                  <Text style={{fontSize: 17}}>Park And Ride </Text>
+                  <Text style={{fontSize: 15}}>{current.attributes.Naam}</Text>
                   <Button style={styles.button} title="Detail Page" onPress={() => navigation.navigate('Detail', {item:current.attributes}, setShowModel(!showModel))}/>
               </View>
             </View>
@@ -215,7 +217,7 @@ const Detail = ({route, navigation}) => {
        storeData(Favorieten);
        setIsFavoriet(false);
      }
-  }} title={isFavoriet ? "Verwijder Favoriet" : "Voeg Favoriet toe"}/>
+  }} title={isFavoriet ? "Verwijder Favoriet" : "Voeg Favoriet toe"} color={ isFavoriet ? "red" : ""}/>
   <Button title="Neem een foto" onPress={() => navigation.navigate('CameraScreen')}/>
 
   
@@ -263,8 +265,6 @@ export const CameraScreen = ({navigation}) => {
 
   );
 }
-
-
 
 
 const storeData = async(locatie) => {
