@@ -191,11 +191,15 @@ const Detail = ({route, navigation}) => {
   const item  = route.params.item;
   const [isFavoriet,setIsFavoriet] = useState();
   useEffect(() => {
-     if(Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID) > -1){
+    if(Favorieten.length == 0){
+      setIsFavoriet(false);
+    } else {
+      if(Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID) > -1){
       setIsFavoriet(true);
      } else {
        setIsFavoriet(false);
      }
+    }
   });
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
