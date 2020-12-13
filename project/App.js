@@ -9,7 +9,10 @@ import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from 'expo-file-system';
+import {Provider as PaperProvider} from 'react-native-paper';
+
+
 
 import { createStackNavigator} from '@react-navigation/stack'
 
@@ -39,6 +42,9 @@ export default () => {
   }
   console.log("data:" + data)
   return (
+
+
+    <PaperProvider>
     <NavigationContainer>
     <StatusBar hidden={true} /> 
       <Tab.Navigator>
@@ -47,6 +53,8 @@ export default () => {
         <Tab.Screen name="Favorites" component={FavoriteScreen}></Tab.Screen>
       </Tab.Navigator>
     </NavigationContainer>
+    </PaperProvider>
+
   )
   
 }
@@ -182,7 +190,6 @@ const FavoriteScreen = ({navigation}) => {
   )
   }
 }
-
 
 const Detail = ({route, navigation}) => {
   const item  = route.params.item;
