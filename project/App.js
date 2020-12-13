@@ -16,7 +16,7 @@ import { createStackNavigator} from '@react-navigation/stack'
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
-var Favorieten = [];
+const Favorieten = [];
 export default () => {
   const [data, setData] = useState([]);
   const [hasPermission, setHasPermission] = useState(null);
@@ -66,12 +66,7 @@ export const ListScreenStack = ({data}) => {
 }
 export const MapScreenStack = ({data}) => {
     return(
-      <Stack.Navigator 
-      screenOptions={{
-        headerShown: false
-  
-      }}
-      
+      <Stack.Navigator   
       >
         <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
         <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
@@ -189,18 +184,18 @@ const FavoriteScreen = ({navigation}) => {
 
 const Detail = ({route, navigation}) => {
   const item  = route.params.item;
-  const [isFavoriet,setIsFavoriet] = useState();
-  useEffect(() => {
-    if(Favorieten.length == 0){
-      setIsFavoriet(false);
-    } else {
-      if(Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID) > -1){
-      setIsFavoriet(true);
-     } else {
+  const [isFavoriet,setIsFavoriet] = useState(false);
+  useEffect(() => {    
+    if(Favorieten.length === 0){
        setIsFavoriet(false);
+     } else {
+       if(Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID) > -1){
+       setIsFavoriet(true);
+      } else {
+        setIsFavoriet(false);
+      }
      }
-    }
-  });
+  },[]);
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
   <View>
@@ -250,6 +245,8 @@ export const CameraScreen = ({navigation}) => {
     setImage(picture.uri);
   }
 
+
+
   
 
   
@@ -275,7 +272,6 @@ const storeData = async(locatie) => {
     const jsonValue = JSON.stringify(locatie);
     await AsyncStorage.setItem("favorieten", jsonValue);
   } catch (error) {
-    
   }
 }
 const getData = async() => {
