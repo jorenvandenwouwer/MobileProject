@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer} from '@react-navigation/native';
+import { NavigationContainer,useFocusEffect} from '@react-navigation/native';
 import { ActivityIndicator,Button,StyleSheet, Text, View , Modal, Image} from 'react-native';
 import MapView, { Callout, Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
@@ -88,7 +88,6 @@ const MapScreen = ({navigation, data}) => {
   const [showModel, setShowModel] = useState(false);
   const [location,setLocation] = useState('loading');
   const [current, setCurrent] = useState(null);
-  const [storeData, setStoreData] = useState(null);
   useEffect(()=>{
       (async() => {
         let position = await Location.getCurrentPositionAsync();
@@ -167,6 +166,10 @@ const ListScreen = ({navigation,data}) => {
   )
 }
 const FavoriteScreen = ({navigation}) => {
+  //const [data, setData] = useState([]);
+  useFocusEffect(()=>{
+    getData();
+  })
   if(Favorieten.length ==0){
     return <View style={styles.container, styles.center}>
       <Text style={{fontSize: 20}}>Voeg eerst favorieten toe</Text>
@@ -194,16 +197,17 @@ const FavoriteScreen = ({navigation}) => {
 const Detail = ({route, navigation}) => {
   const item  = route.params.item;
   const [isFavoriet,setIsFavoriet] = useState(false);
-  useEffect(() => {    
-    if(Favorieten.length === 0){
-       setIsFavoriet(false);
+  useEffect(() => {
+    getData();   
+    if(Favorieten === null){
+      setIsFavoriet(false);
+    } else {
+      if(Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID) > -1){
+      setIsFavoriet(true);
      } else {
-       if(Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID) > -1){
-       setIsFavoriet(true);
-      } else {
-        setIsFavoriet(false);
-      }
+       setIsFavoriet(false);
      }
+    }
   },[]);
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
@@ -277,6 +281,7 @@ export const CameraScreen = ({navigation}) => {
 const storeData = async(locatie) => {
   try {
     const jsonValue = JSON.stringify(locatie);
+    console.log(jsonValue)
     await AsyncStorage.setItem("favorieten", jsonValue);
   } catch (error) {
   }
@@ -284,7 +289,7 @@ const storeData = async(locatie) => {
 const getData = async() => {
   try {
     const value = await AsyncStorage.getItem('favorieten');
-    if(value !== undefined){
+    if(value !== null){
       Favorieten = JSON.parse(value);
     }
   } catch (error) {
