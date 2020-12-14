@@ -10,13 +10,8 @@ import AsyncStorage from '@react-native-community/async-storage';
 import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
-import {Provider as PaperProvider} from 'react-native-paper';
 
-
-
-import { createStackNavigator} from '@react-navigation/stack'
-
-
+import { createStackNavigator} from '@react-navigation/stack';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 let Favorieten = [];
@@ -42,9 +37,6 @@ export default () => {
   }
   console.log("data:" + data)
   return (
-
-
-    <PaperProvider>
     <NavigationContainer>
     <StatusBar hidden={true} /> 
       <Tab.Navigator>
@@ -53,8 +45,6 @@ export default () => {
         <Tab.Screen name="Favorites" component={FavoriteScreen}></Tab.Screen>
       </Tab.Navigator>
     </NavigationContainer>
-    </PaperProvider>
-
   )
   
 }
@@ -192,6 +182,23 @@ const FavoriteScreen = ({navigation}) => {
 }
 
 const Detail = ({route, navigation}) => {
+  const [getPicture, setGetPicture] = useState();
+
+  useEffect(() => {
+    const getDir = async() => {
+      try {
+        const dirInfo = await FileSystem.getInfoAsync(`${fotoDir}/photo.jpg`);
+        console.log(dirInfo); 
+        setGetPicture(dirInfo.uri);
+        
+      } catch (error) {
+        
+      }
+    }
+    if ( getPicture !== null) {
+      getDir();
+    }
+  },[])
   const item  = route.params.item;
   const [isFavoriet,setIsFavoriet] = useState(false);
   useEffect(() => {    
@@ -208,6 +215,8 @@ const Detail = ({route, navigation}) => {
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
   <View>
+    {getPicture ? <View><Text>Picture loaded</Text></View> : <View/>
+  }
   <Text>{item.Naam}</Text>
   <Text>{item.Gemeente}</Text>
   <Text>{item.District}</Text>
@@ -254,6 +263,48 @@ export const CameraScreen = ({navigation}) => {
     setImage(picture.uri);
   }
 
+  useEffect(() => {
+    const fotoDir = FileSystem.cacheDirectory +'foto/';
+
+    const createDirectory = async() => {
+      const dirInfo = await FileSystem.getInfoAsync(fotoDir);
+      if(!dirInfo.exists){
+        console.log("foto directory bestaat niet, aanmaken...");
+        const newDir = FileSystem.makeDirectoryAsync(fotoDir, {intermediates: true});
+      }
+      console.log(dirInfo);
+
+    };
+
+    const addFotoDirectory = async() => {
+      try {
+        await createDirectory(); 
+        FileSystem.moveAsync({
+          from: image,
+          to: `${fotoDir}/photo.jpg`
+        });
+        const dirInfo = await FileSystem.getInfoAsync(`${fotoDir}/photo.jpg`);
+        console.log("foto added");
+        console.log(dirInfo);
+        // console.log('foto wordt toegevoegd aan directory...');
+        // const dirInfo = await FileSystem.getInfoAsync(fotoDir);
+        // const fileInfo = await FileSystem.getInfoAsync(image);
+        // const moveFoto = await FileSystem.copyAsync(fileInfo.uri, dirInfo.uri);
+        // console.log(fileInfo.uri);
+        // console.log(dirInfo.uri);
+      }
+      catch(err){
+        console.log("Kan niet foto toegvoegen: " + err);
+      }
+
+    
+    };
+    if (image !== null && image) {
+
+      addFotoDirectory();
+
+    }
+  }, [image]);
 
 
   
