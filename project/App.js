@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer} from '@react-navigation/native';
+import { NavigationContainer, useFocusEffect} from '@react-navigation/native';
 import { ActivityIndicator,Button,StyleSheet, Text, View , Modal, Image} from 'react-native';
 import MapView, { Callout, Circle, Marker, Overlay } from 'react-native-maps';
 import fetch from 'node-fetch';
@@ -182,23 +182,24 @@ const FavoriteScreen = ({navigation}) => {
 }
 
 const Detail = ({route, navigation}) => {
-  const [getPicture, setGetPicture] = useState();
+  const [detailPicture, setDetailPicture] = useState();
+  const fotoDir = FileSystem.cacheDirectory +'foto/';
+  const getPicture = async() => {
+    try {
+      const getDirInfo = await FileSystem.getInfoAsync(`${fotoDir}/photo.jpg`);
+      alert(getDirInfo);
+      setDetailPicture(getDirInfo);
+    }
+    catch(e) {
+      console.log('error bij getPicture: ' + e);
+    }
+  }
+  useFocusEffect(() => {
+    if(detailPicture !== undefined) {
+      getPicture();
+    }
+  });
 
-  useEffect(() => {
-    const getDir = async() => {
-      try {
-        const dirInfo = await FileSystem.getInfoAsync(`${fotoDir}/photo.jpg`);
-        console.log(dirInfo); 
-        setGetPicture(dirInfo.uri);
-        
-      } catch (error) {
-        
-      }
-    }
-    if ( getPicture !== null) {
-      getDir();
-    }
-  },[])
   const item  = route.params.item;
   const [isFavoriet,setIsFavoriet] = useState(false);
   useEffect(() => {    
@@ -215,8 +216,7 @@ const Detail = ({route, navigation}) => {
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
   <View>
-    {getPicture ? <View><Text>Picture loaded</Text></View> : <View/>
-  }
+    {/* {getPicture && <Image source={{uri: getPicture.uri}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/>} */}
   <Text>{item.Naam}</Text>
   <Text>{item.Gemeente}</Text>
   <Text>{item.District}</Text>
@@ -235,8 +235,6 @@ const Detail = ({route, navigation}) => {
      }
   }} title={isFavoriet ? "Verwijder Favoriet" : "Voeg Favoriet toe"} color={ isFavoriet ? "red" : ""}/>
   <Button title="Neem een foto" onPress={() => navigation.navigate('CameraScreen')}/>
-
-  
 </View>);
 }
 
@@ -244,6 +242,8 @@ export const CameraScreen = ({navigation}) => {
   const [hasPermission, setHasPermission] = useState();
   const camera = useRef();
   const [image, setImage] = useState();
+  const fotoDir = FileSystem.cacheDirectory +'foto/';
+
   useEffect(() => {
       (async() => {
         const {status} = await Camera.requestPermissionsAsync();
@@ -258,60 +258,39 @@ export const CameraScreen = ({navigation}) => {
     return <Text>Geen toegang tot camera</Text>
   }
   const takePicture = async() => {
-    let picture = await camera.current.takePictureAsync();
-    //camera.current heeft jouw echt de reference van de camera terug
-    setImage(picture.uri);
+    try {
+      let picture = await camera.current.takePictureAsync();
+      //camera.current heeft jouw echt de reference van de camera terug
+      setImage(picture.uri);
+      addFotoDirectory();
+      
+    } catch (error) {
+      console.log('picture couldnt be taken: ' + error);
+    }
+
   }
 
-  useEffect(() => {
-    const fotoDir = FileSystem.cacheDirectory +'foto/';
 
-    const createDirectory = async() => {
-      const dirInfo = await FileSystem.getInfoAsync(fotoDir);
-      if(!dirInfo.exists){
-        console.log("foto directory bestaat niet, aanmaken...");
-        const newDir = FileSystem.makeDirectoryAsync(fotoDir, {intermediates: true});
-      }
-      console.log(dirInfo);
-
-    };
-
-    const addFotoDirectory = async() => {
-      try {
-        await createDirectory(); 
-        FileSystem.moveAsync({
-          from: image,
-          to: `${fotoDir}/photo.jpg`
-        });
-        const dirInfo = await FileSystem.getInfoAsync(`${fotoDir}/photo.jpg`);
-        console.log("foto added");
-        console.log(dirInfo);
-        // console.log('foto wordt toegevoegd aan directory...');
-        // const dirInfo = await FileSystem.getInfoAsync(fotoDir);
-        // const fileInfo = await FileSystem.getInfoAsync(image);
-        // const moveFoto = await FileSystem.copyAsync(fileInfo.uri, dirInfo.uri);
-        // console.log(fileInfo.uri);
-        // console.log(dirInfo.uri);
-      }
-      catch(err){
-        console.log("Kan niet foto toegvoegen: " + err);
-      }
-
-    
-    };
-    if (image !== null && image) {
-
-      addFotoDirectory();
-
+  const createDirectory = async() => {
+    const dirInfo = await FileSystem.getInfoAsync(fotoDir);
+    if(!dirInfo.exists){
+      console.log("foto directory bestaat niet, aanmaken...");
+      const newDir = FileSystem.makeDirectoryAsync(fotoDir, {intermediates: true});
     }
-  }, [image]);
-
-
-  
-
-  
-
-
+  };
+  const addFotoDirectory = async() => {
+    try {
+      await createDirectory(); 
+      FileSystem.moveAsync({
+        from: image,
+        to: `${fotoDir}/photo.jpg`
+      });
+      const dirInfo = await FileSystem.getInfoAsync(`${fotoDir}/photo.jpg`);
+      console.log("foto added");
+    }
+    catch(err){
+      console.log("Kan niet foto toegvoegen: " + err);
+    }};
   return (
     <View style={styles.cameraStyle}>
       <Camera style={{flex: 1}} type={Camera.Constants.Type.back} ref={camera} />
@@ -323,8 +302,6 @@ export const CameraScreen = ({navigation}) => {
 
   );
 }
-
-
 const storeData = async(locatie) => {
   try {
     const jsonValue = JSON.stringify(locatie);
