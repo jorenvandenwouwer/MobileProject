@@ -11,6 +11,8 @@ import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
 import {Provider as PaperProvider} from 'react-native-paper';
+import { Entypo } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons'; 
 
 
 
@@ -48,9 +50,14 @@ export default () => {
     <NavigationContainer>
     <StatusBar hidden={true} /> 
       <Tab.Navigator>
-        <Tab.Screen name="Map" >{props => <MapScreenStack {...props} data={data}/>}</Tab.Screen>
-        <Tab.Screen name="List" >{props => <ListScreenStack {...props} data={data}/>}</Tab.Screen>
-        <Tab.Screen name="Favorites" component={FavoriteScreen}></Tab.Screen>
+        <Tab.Screen name="Map" options={{tabBarIcon: ({focused}) => (<MaterialIcons name="map" size={24} color={focused ? "blue" : "black"} />)}}>
+          {props => <MapScreenStack {...props} data={data}/>}
+          </Tab.Screen>
+        <Tab.Screen name="List" options={{tabBarIcon: ({focused}) => (<MaterialIcons name="list" size={24} color={focused ? "blue" : "black"} />)}}>
+          {props => <ListScreenStack {...props} data={data}/>}</Tab.Screen>
+        <Tab.Screen name="Favorites" component={FavoriteScreen} 
+        options={{tabBarIcon: ({focused}) => (<MaterialIcons name="star" size={24} color={focused ? "blue" : "black"} />)}}>
+        </Tab.Screen>
       </Tab.Navigator>
     </NavigationContainer>
     </PaperProvider>
@@ -60,11 +67,8 @@ export default () => {
 }
 export const ListScreenStack = ({data}) => {
   return(
-    <Stack.Navigator
-      Options={{
-        headerShown:false
-      }}>
-      <Stack.Screen name="ListViewScreen" >{props => <ListScreen {...props} data={data}/>}</Stack.Screen>
+    <Stack.Navigator>
+      <Stack.Screen name="ListViewScreen" options={{headerShown:false}}>{props => <ListScreen {...props} data={data}/>}</Stack.Screen>
       <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
       <Stack.Screen name="CameraScreen" component={CameraScreen}></Stack.Screen>
     </Stack.Navigator>
@@ -74,9 +78,8 @@ export const ListScreenStack = ({data}) => {
 }
 export const MapScreenStack = ({data}) => {
     return(
-      <Stack.Navigator   
-      >
-        <Stack.Screen name="MapViewScreen" >{props => <MapScreen {...props} data={data}/>}</Stack.Screen>
+      <Stack.Navigator>
+        <Stack.Screen name="MapViewScreen" options={{headerShown:false}}>{props => <MapScreen {...props} data={data} />}</Stack.Screen>
         <Stack.Screen name="Detail" component={Detail}></Stack.Screen>
         <Stack.Screen name="CameraScreen" component={CameraScreen}></Stack.Screen>
       </Stack.Navigator>
@@ -166,7 +169,6 @@ const ListScreen = ({navigation,data}) => {
   )
 }
 const FavoriteScreen = ({navigation}) => {
-  //const [data, setData] = useState([]);
   useFocusEffect(()=>{
     getData();
   })
