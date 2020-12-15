@@ -50,7 +50,7 @@ export default () => {
     <NavigationContainer>
     <StatusBar hidden={true} /> 
       <Tab.Navigator>
-        <Tab.Screen name="Map" options={{tabBarIcon: ({focused}) => (<MaterialIcons name="map" size={24} color={focused ? "blue" : "black"} />)}}>
+        <Tab.Screen name="Map" options={{tabBarIcon: ({focused}) => (<MaterialIcons name="location-on" size={24} color={focused ? "blue" : "black"} />)}}>
           {props => <MapScreenStack {...props} data={data}/>}
           </Tab.Screen>
         <Tab.Screen name="List" options={{tabBarIcon: ({focused}) => (<MaterialIcons name="list" size={24} color={focused ? "blue" : "black"} />)}}>
@@ -214,9 +214,8 @@ const Detail = ({route, navigation}) => {
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
   <View>
-  <Text>{item.Naam}</Text>
+  <Text style={{fontWeight : 'bold', fontSize: 24}}>{item.Naam}</Text>
   <Text>{item.Gemeente}</Text>
-  <Text>{item.District}</Text>
   <Text>{item.Postcode}</Text>
   <Button onPress={() =>{
     const index = Favorieten.map(e => e.OBJECTID).indexOf(item.OBJECTID);
