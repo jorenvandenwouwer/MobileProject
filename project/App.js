@@ -10,7 +10,6 @@ import AsyncStorage from '@react-native-community/async-storage';
 import * as Location from 'expo-location';
 import { Camera } from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
-import {Provider as PaperProvider} from 'react-native-paper';
 import { Entypo } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons'; 
 
@@ -18,6 +17,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 import { createStackNavigator} from '@react-navigation/stack'
 
+
+let pictureDir;
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -44,9 +45,6 @@ export default () => {
   }
   console.log("data:" + data)
   return (
-
-
-    <PaperProvider>
     <NavigationContainer>
     <StatusBar hidden={true} /> 
       <Tab.Navigator>
@@ -60,8 +58,6 @@ export default () => {
         </Tab.Screen>
       </Tab.Navigator>
     </NavigationContainer>
-    </PaperProvider>
-
   )
   
 }
@@ -197,8 +193,34 @@ const FavoriteScreen = ({navigation}) => {
 }
 
 const Detail = ({route, navigation}) => {
+  const [detailPic, setDetailPic] = useState();
   const item  = route.params.item;
   const [isFavoriet,setIsFavoriet] = useState(false);
+  const detailDir = FileSystem.cacheDirectory + 'detail/';
+  const path =`${FileSystem.cacheDirectory}/detail.jpg`;
+
+
+  
+  
+  useFocusEffect(() => {
+    try {
+      const getPic = async() => {
+        const value = await AsyncStorage.getItem("@detail_pic");
+        if (value != null) {
+          setDetailPic(value);
+        }
+      }
+  
+      getPic();
+      
+    } catch (error) {
+      console.log("errror with control dir:" + error);
+    }
+   
+  })
+
+  
+
   useEffect(() => {
     getData();   
     if(Favorieten === null){
@@ -214,6 +236,7 @@ const Detail = ({route, navigation}) => {
   //route om toegang te krijgen van de data en navigation om terug te gaan naar onze listview
   return(
   <View>
+  {detailPic && <Image source={{uri: detailPic}} style={{width: 500, height: 500  }}/> }
   <Text style={{fontWeight : 'bold', fontSize: 24}}>{item.Naam}</Text>
   <Text>{item.Gemeente}</Text>
   <Text>{item.Postcode}</Text>
@@ -239,7 +262,9 @@ const Detail = ({route, navigation}) => {
 export const CameraScreen = ({navigation}) => {
   const [hasPermission, setHasPermission] = useState();
   const camera = useRef();
-  const [image, setImage] = useState();
+
+
+  const [detailPic, setDetailPic] = useState();
   useEffect(() => {
       (async() => {
         const {status} = await Camera.requestPermissionsAsync();
@@ -253,30 +278,49 @@ export const CameraScreen = ({navigation}) => {
   if (hasPermission === false) {
     return <Text>Geen toegang tot camera</Text>
   }
+
+
   const takePicture = async() => {
-    let picture = await camera.current.takePictureAsync();
-    //camera.current heeft jouw echt de reference van de camera terug
-    setImage(picture.uri);
+    try {
+      //await DirExists();
+
+      let {uri} = await camera.current.takePictureAsync();
+      let date = new Date();
+      let newPic = date.toString();
+      let code = `${FileSystem.cacheDirectory}/new${newPic}.jpg`;
+      await FileSystem.moveAsync({
+        from: uri,
+        to: code
+      });
+     // await storePic(picture.uri);
+      const test = await FileSystem.getInfoAsync(code);
+      setDetailPic(test.uri);
+      await AsyncStorage.setItem("@detail_pic", code);
+
+      console.log(getPic);
+
+    } catch (error) {
+      console.log("error bij takepicture method " + error);
+    }
+    
   }
-
-
-
-  
-
-  
-
 
   return (
     <View style={styles.cameraStyle}>
       <Camera style={{flex: 1}} type={Camera.Constants.Type.back} ref={camera} />
       {/* soms wil je een refrence naar object van die camera om een functie te kunnen uitvoeren*/}
       {/* soms wil je op het object zelf een functie aan roepen  */}
-      {image && <Image source={{uri: image}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/> }
+      {detailPic && <Image source={{uri: detailPic}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/> }
       <Button title="Neem foto" onPress={takePicture} />
     </View>
 
   );
 }
+
+
+
+
+
 
 
 const storeData = async(locatie) => {
