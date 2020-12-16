@@ -13,6 +13,7 @@ import * as FileSystem from 'expo-file-system';
 import { Entypo } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons'; 
 
+//project van Joren Van Den Wouwer en Benito Nwuje 
 
 
 import { createStackNavigator} from '@react-navigation/stack'
@@ -262,8 +263,6 @@ const Detail = ({route, navigation}) => {
 export const CameraScreen = ({navigation}) => {
   const [hasPermission, setHasPermission] = useState();
   const camera = useRef();
-
-
   const [detailPic, setDetailPic] = useState();
   useEffect(() => {
       (async() => {
@@ -278,12 +277,8 @@ export const CameraScreen = ({navigation}) => {
   if (hasPermission === false) {
     return <Text>Geen toegang tot camera</Text>
   }
-
-
   const takePicture = async() => {
     try {
-      //await DirExists();
-
       let {uri} = await camera.current.takePictureAsync();
       let date = new Date();
       let newPic = date.toString();
@@ -292,13 +287,9 @@ export const CameraScreen = ({navigation}) => {
         from: uri,
         to: code
       });
-     // await storePic(picture.uri);
       const test = await FileSystem.getInfoAsync(code);
       setDetailPic(test.uri);
       await AsyncStorage.setItem("@detail_pic", code);
-
-      console.log(getPic);
-
     } catch (error) {
       console.log("error bij takepicture method " + error);
     }
@@ -312,6 +303,7 @@ export const CameraScreen = ({navigation}) => {
       {/* soms wil je op het object zelf een functie aan roepen  */}
       {detailPic && <Image source={{uri: detailPic}} style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200  }}/> }
       <Button title="Neem foto" onPress={takePicture} />
+      {detailPic ? <Text>Foto is opgeslagen ga terug naar detail</Text> : <Text> Wacht een paar minuten voor de foto... </Text>}
     </View>
 
   );
